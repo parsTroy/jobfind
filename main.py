@@ -150,7 +150,7 @@ def fetch_remoteok():
         if isinstance(item, dict) and 'id' not in item:
             continue
         job_id = f"remoteok_{item.get('id')}"
-        # created_at sometimes as epoch or string
+        # created_at sometimes as epoch or string - STRICT 24 hour limit
         epoch = item.get('epoch')
         is_recent = False
         if epoch:
@@ -212,7 +212,7 @@ def fetch_jsearch_jobs():
     for item in data.get('data', []):
         job_id = f"jsearch_{item.get('job_id')}"
         
-        # Check if job is recent (within last 24 hours)
+        # Check if job is recent (within last 24 hours - STRICT)
         posted_at = item.get('job_posted_at_datetime_utc')
         if not posted_at:
             continue
@@ -389,7 +389,7 @@ def fetch_linkedin_jobs():
             
         job_id = f"linkedin_{item.get('id')}"
         
-        # Check if job is recent (within last 24 hours)
+        # Check if job is recent (within last 24 hours - STRICT)
         posted_at = item.get('date_posted')
         if not posted_at:
             continue
@@ -508,9 +508,9 @@ def fetch_glassdoor_jobs():
         
         job_id = f"glassdoor_{job_data.get('listingId', '')}"
         
-        # Check if job is recent (within last 7 days)
+        # Check if job is recent (within last 24 hours - STRICT)
         age_in_days = header_data.get('ageInDays', 999)
-        if age_in_days > 7:  # Only jobs from last week
+        if age_in_days > 0:  # Only jobs from today (0 days old)
             continue
             
         title = job_data.get('jobTitleText', '')
@@ -616,9 +616,9 @@ def fetch_glassdoor_jobs_canada():
         
         job_id = f"glassdoor_ca_{job_data.get('listingId', '')}"
         
-        # Check if job is recent (within last 7 days)
+        # Check if job is recent (within last 24 hours - STRICT)
         age_in_days = header_data.get('ageInDays', 999)
-        if age_in_days > 7:  # Only jobs from last week
+        if age_in_days > 0:  # Only jobs from today (0 days old)
             continue
             
         title = job_data.get('jobTitleText', '')
@@ -906,14 +906,14 @@ def fetch_stackoverflow_jobs():
         # Extract job ID from the link
         job_id = f"stackoverflow_{hash(entry.link) % 1000000}"
         
-        # Check if job is recent (within last hour)
+        # Check if job is recent (within last 24 hours - STRICT)
         published = entry.get('published_parsed')
         if not published:
             continue
             
         # Convert to datetime and check if recent
         pub_date = datetime(*published[:6], tzinfo=timezone.utc)
-        if (datetime.now(timezone.utc) - pub_date) > timedelta(hours=1):
+        if (datetime.now(timezone.utc) - pub_date) > timedelta(hours=24):
             continue
             
         title = entry.get('title', '')
